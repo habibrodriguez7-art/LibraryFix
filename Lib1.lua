@@ -254,11 +254,31 @@ local function RegisterCallback(configPath, callback, componentType, defaultValu
 end
 
 local function ExecuteConfigCallbacks()
+    -- Phase 1: restore every component's saved value + visual state WITHOUT
+    -- running any action callbacks. This guarantees that dropdown/input filter
+    -- values are already in place before any toggle action runs.
     for _, entry in pairs(CallbackRegistry) do
-        local value = Library.ConfigSystem.Get(entry.path, entry.default)
-        if entry.updateVisual then pcall(entry.updateVisual, value) end
-        if entry.callback     then pcall(entry.callback,     value) end
+        if entry.updateVisual then
+            local value = Library.ConfigSystem.Get(entry.path, entry.default)
+            pcall(entry.updateVisual, value)
+        end
     end
+    -- Phase 2: run action callbacks. Non-toggle components (dropdown, input,
+    -- etc.) run first so their filters/selections are fully applied, then
+    -- toggles run last -- a toggle like "Auto Favorite" therefore starts only
+    -- after its dropdown filter has been restored, fixing the load-order bug
+    -- where the toggle ran unfiltered on execute.
+    local function runCallbacks(wantToggle)
+        for _, entry in pairs(CallbackRegistry) do
+            local isToggle = entry.type == "toggle"
+            if entry.callback and isToggle == wantToggle then
+                local value = Library.ConfigSystem.Get(entry.path, entry.default)
+                pcall(entry.callback, value)
+            end
+        end
+    end
+    runCallbacks(false)
+    runCallbacks(true)
 end
 _G.AutoSaveEnabled = true
 function _G.GetConfigValue(key, default)
