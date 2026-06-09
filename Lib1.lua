@@ -633,7 +633,7 @@ function Library:CreateWindow(config)
                 end
             end
         end)
-        icon.Destroying:Connect(disconnectIconConns)
+        self:AddConnection("iconDestroying", icon.Destroying:Connect(disconnectIconConns))
     end
     self:AddConnection("minimizeBtn", btnMinHeader.MouseButton1Click:Connect(function()
         if not minimized then
@@ -681,9 +681,9 @@ function Library:CreateWindow(config)
             resizing = false
         end
     end))
-    self._gui.Destroying:Connect(function()
+    self:AddConnection("guiDestroying", self._gui.Destroying:Connect(function()
         self:Cleanup()
-    end)
+    end))
     return self
 end
 function Library:CreatePage(name, title, imageId, order)
@@ -1367,19 +1367,15 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
         clearOptionFrames()
         DropdownFunc.Options = newList
         
-        -- Kita masukkan pembuatan elemen ke dalam task.spawn agar background UI
-        -- tidak menunggu operasi pemrosesan array besar selesai secara kaku.
-        task.spawn(function()
-            local batchSize = 20
-            for i, opt in ipairs(newList) do
-                DropdownFunc:AddOption(opt)
-                if i % batchSize == 0 then
-                    RunService.Heartbeat:Wait()
-                end
+        local batchSize = 20
+        for i, opt in ipairs(newList) do
+            DropdownFunc:AddOption(opt)
+            if i % batchSize == 0 then
+                RunService.Heartbeat:Wait()
             end
-            isBuilt = true
-            DropdownFunc:Set(selecting)
-        end)
+        end
+        isBuilt = true
+        DropdownFunc:Set(selecting)
     end
     
     function DropdownFunc:Refresh(newList)
@@ -1534,7 +1530,20 @@ function Library:CreateInput(parent, label, configPath, defaultValue, callback)
         local resolved = resolveValue(tostring(initialValue))
         callback(resolved)
     end
-    return frame
+    return frame, {
+        SetValue = function(_, val)
+            inputBox.Text = tostring(val or "")
+            local resolved = resolveValue(tostring(val))
+            if configPath then
+                Library.ConfigSystem.Set(configPath, resolved)
+                MarkDirty()
+            end
+            if callback then callback(resolved) end
+        end,
+        GetValue = function()
+            return resolveValue(inputBox.Text)
+        end
+    }
 end
 function Library:CreateButton(parent, label, callback)
     local btnFrame = new("Frame", {
@@ -1985,22 +1994,9 @@ function Library:Window(config)
                 local noSave      = inputConfig.NoSave or false
                 local configPath  = noSave and nil or ("Inputs." .. title:gsub("%s+", "_"))
                 
-                local frame = self._library:CreateInput(self._container, title, configPath, default, callback)
+                local frame, inputController = self._library:CreateInput(self._container, title, configPath, default, callback)
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
-                return {
-                    SetValue = function(_, val)
-                        inputBox.Text = tostring(val or "")
-                        local resolved = resolveValue(tostring(val))
-                        if configPath then
-                            Library.ConfigSystem.Set(configPath, resolved)
-                            MarkDirty()
-                        end
-                        if callback then callback(resolved) end
-                    end,
-                    GetValue = function()
-                        return resolveValue(inputBox.Text)
-                    end
-                }
+                return inputController
             end
             function SectionObject:AddButton(buttonConfig)
                 buttonConfig = buttonConfig or {}
@@ -2105,9 +2101,9 @@ function Library:Window(config)
                 end
 
                 if titleLabel then
-                    titleLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow)
+                    self._library:AddConnection("paragraph_title_" .. tostring(frame), titleLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow))
                 end
-                contentLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow)
+                self._library:AddConnection("paragraph_content_" .. tostring(frame), contentLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow))
                 task.defer(reflow)
 
                 return {
