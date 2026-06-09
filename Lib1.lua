@@ -473,9 +473,10 @@ function Library:CreateWindow(config)
     })
     local discordSep = new("Frame", {
         Parent = btnDiscord,
-        Size = UDim2.new(0, 1, 0, 14),
-        Position = UDim2.new(0, 25, 0.5, -7),
+        Size = UDim2.new(0, 1, 0, 12),
+        Position = UDim2.new(0, 25, 0.5, -6),
         BackgroundColor3 = colors.primary,
+        BackgroundTransparency = 0.45,
         BorderSizePixel = 0,
         ZIndex = 8
     })
