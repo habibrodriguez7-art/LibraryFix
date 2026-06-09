@@ -755,7 +755,7 @@ function Library:CreateWindow(config)
 end
 function Library:_createSearchBar()
     local searchW = sidebarWidth - 12
-    local searchH = 26
+    local searchH = 22
     local searchContainer = new("Frame", {
         Parent = self._sidebar,
         Size = UDim2.new(0, searchW, 0, searchH),
