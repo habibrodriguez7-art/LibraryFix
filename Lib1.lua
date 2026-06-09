@@ -735,23 +735,25 @@ function Library:_createSearchBar(scriptHeader)
         Visible = false,
         ZIndex = 9
     })
+    local ROW_H, ROW_GAP, LIST_PAD, MAX_PANEL_H = 32, 3, 4, 168
     local resultsPanel = new("Frame", {
         Parent = self._win,
-        Size = UDim2.new(1, -(sidebarWidth + 6), 1, -(headerHeight + 6)),
-        Position = UDim2.new(0, sidebarWidth + 3, 0, headerHeight + 3),
-        BackgroundColor3 = colors.bg1,
+        Size = UDim2.new(0, searchW, 0, ROW_H + LIST_PAD * 2),
+        Position = UDim2.new(1, -(searchW + 36), 0, headerHeight + 2),
+        BackgroundColor3 = colors.bg2,
         BackgroundTransparency = panelTransparency,
         BorderSizePixel = 0,
         Visible = false,
         ClipsDescendants = true,
-        ZIndex = 40,
+        ZIndex = 60,
         Name = "SearchResults"
     })
-    new("UICorner", {Parent = resultsPanel, CornerRadius = UDim.new(0, 6)})
+    new("UICorner", {Parent = resultsPanel, CornerRadius = UDim.new(0, 5)})
+    new("UIStroke", {Parent = resultsPanel, Color = colors.border, Thickness = 1, Transparency = 0.35})
     local resultsList = new("ScrollingFrame", {
         Parent = resultsPanel,
-        Size = UDim2.new(1, -8, 1, -8),
-        Position = UDim2.new(0, 4, 0, 4),
+        Size = UDim2.new(1, -6, 1, -6),
+        Position = UDim2.new(0, 3, 0, 3),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ScrollBarThickness = 3,
@@ -760,22 +762,23 @@ function Library:_createSearchBar(scriptHeader)
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         ScrollingDirection = Enum.ScrollingDirection.Y,
         ClipsDescendants = true,
-        ZIndex = 41
+        ZIndex = 61
     })
-    new("UIListLayout", {Parent = resultsList, Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder})
-    new("UIPadding", {Parent = resultsList, PaddingTop = UDim.new(0, 2), PaddingRight = UDim.new(0, 2)})
+    new("UIListLayout", {Parent = resultsList, Padding = UDim.new(0, ROW_GAP), SortOrder = Enum.SortOrder.LayoutOrder})
+    new("UIPadding", {Parent = resultsList, PaddingRight = UDim.new(0, 1)})
     local emptyLabel = new("TextLabel", {
         Parent = resultsPanel,
         Text = "No features found",
-        Size = UDim2.new(1, -16, 0, 22),
-        Position = UDim2.new(0, 8, 0, 8),
+        Size = UDim2.new(1, -16, 1, 0),
+        Position = UDim2.new(0, 8, 0, 0),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.small,
         TextColor3 = colors.textDimmer,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
         Visible = false,
-        ZIndex = 42
+        ZIndex = 62
     })
     local function clearRows()
         for _, child in ipairs(resultsList:GetChildren()) do
@@ -842,38 +845,37 @@ function Library:_createSearchBar(scriptHeader)
                 order = order + 1
                 local row = new("TextButton", {
                     Parent = resultsList,
-                    Size = UDim2.new(1, 0, 0, 30),
-                    BackgroundColor3 = colors.bg2,
+                    Size = UDim2.new(1, 0, 0, ROW_H),
+                    BackgroundColor3 = colors.bg3,
                     BackgroundTransparency = sectionTransparency,
                     BorderSizePixel = 0,
                     Text = "",
                     AutoButtonColor = false,
                     LayoutOrder = order,
-                    ZIndex = 42
+                    ZIndex = 62
                 })
                 new("UICorner", {Parent = row, CornerRadius = UDim.new(0, 4)})
-                new("UIStroke", {Parent = row, Color = colors.border, Thickness = 1, Transparency = 0.6})
                 local accent = new("Frame", {
                     Parent = row,
-                    Size = UDim2.new(0, 3, 0, 16),
-                    Position = UDim2.new(0, 0, 0.5, -8),
+                    Size = UDim2.new(0, 3, 1, -8),
+                    Position = UDim2.new(0, 0, 0, 4),
                     BackgroundColor3 = colors.primary,
                     BorderSizePixel = 0,
-                    ZIndex = 43
+                    ZIndex = 63
                 })
                 new("UICorner", {Parent = accent, CornerRadius = UDim.new(1, 0)})
                 new("TextLabel", {
                     Parent = row,
                     Text = entry.name,
-                    Size = UDim2.new(0.6, -12, 1, 0),
-                    Position = UDim2.new(0, 10, 0, 0),
+                    Size = UDim2.new(1, -14, 0, 15),
+                    Position = UDim2.new(0, 9, 0, 4),
                     BackgroundTransparency = 1,
                     Font = Enum.Font.GothamBold,
                     TextSize = fontSize.small,
                     TextColor3 = colors.text,
                     TextXAlignment = Enum.TextXAlignment.Left,
                     TextTruncate = Enum.TextTruncate.AtEnd,
-                    ZIndex = 43
+                    ZIndex = 63
                 })
                 local metaText = entry.pageName or ""
                 if entry.sectionTitle and entry.sectionTitle ~= "" then
@@ -882,23 +884,31 @@ function Library:_createSearchBar(scriptHeader)
                 new("TextLabel", {
                     Parent = row,
                     Text = metaText,
-                    Size = UDim2.new(0.4, -10, 1, 0),
-                    Position = UDim2.new(0.6, 0, 0, 0),
+                    Size = UDim2.new(1, -14, 0, 11),
+                    Position = UDim2.new(0, 9, 0, 18),
                     BackgroundTransparency = 1,
-                    Font = Enum.Font.GothamBold,
-                    TextSize = fontSize.small,
+                    Font = Enum.Font.GothamMedium,
+                    TextSize = 9,
                     TextColor3 = colors.textDimmer,
-                    TextXAlignment = Enum.TextXAlignment.Right,
+                    TextXAlignment = Enum.TextXAlignment.Left,
                     TextTruncate = Enum.TextTruncate.AtEnd,
-                    ZIndex = 43
+                    ZIndex = 63
                 })
-                row.MouseEnter:Connect(function() row.BackgroundColor3 = colors.bg3 end)
-                row.MouseLeave:Connect(function() row.BackgroundColor3 = colors.bg2 end)
+                row.MouseEnter:Connect(function() row.BackgroundColor3 = colors.bg4 end)
+                row.MouseLeave:Connect(function() row.BackgroundColor3 = colors.bg3 end)
                 local capturedEntry = entry
                 row.MouseButton1Click:Connect(function() goToFeature(capturedEntry) end)
             end
         end
         emptyLabel.Visible = (order == 0)
+        local panelH
+        if order == 0 then
+            panelH = ROW_H + LIST_PAD * 2
+        else
+            local contentH = order * ROW_H + math.max(0, order - 1) * ROW_GAP + LIST_PAD * 2
+            panelH = math.min(contentH, MAX_PANEL_H)
+        end
+        resultsPanel.Size = UDim2.new(0, searchW, 0, panelH)
         resultsPanel.Visible = true
     end
     self:AddConnection("searchTextChanged", searchBox:GetPropertyChangedSignal("Text"):Connect(function()
