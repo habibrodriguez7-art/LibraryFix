@@ -259,8 +259,18 @@ end
 local function ExecuteConfigCallbacks()
     for _, entry in pairs(CallbackRegistry) do
         local value = Library.ConfigSystem.Get(entry.path, entry.default)
-        if entry.updateVisual then pcall(entry.updateVisual, value) end
-        if entry.callback     then pcall(entry.callback,     value) end
+        if entry.updateVisual then
+            local ok, err = pcall(entry.updateVisual, value)
+            if not ok then
+                warn("[LynxGUI] Visual update error for '" .. tostring(entry.path) .. "': " .. tostring(err))
+            end
+        end
+        if entry.callback then
+            local ok, err = pcall(entry.callback, value)
+            if not ok then
+                warn("[LynxGUI] Callback error for '" .. tostring(entry.path) .. "': " .. tostring(err))
+            end
+        end
     end
 end
 _G.LynxGUI = _G.LynxGUI or {}
@@ -283,7 +293,6 @@ _G.GetConfigValue = _G.LynxGUI.GetConfigValue
 _G.SaveConfigValue = _G.LynxGUI.SaveConfigValue
 _G.GetFullConfig = _G.LynxGUI.GetFullConfig
 function Library:CreateWindow(config)
-    self:Cleanup()
     config = config or {}
     local name = config.Name or "LynxGUI"
     local title = config.Title or "LynX"
