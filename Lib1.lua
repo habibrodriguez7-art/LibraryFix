@@ -443,7 +443,10 @@ function Library:CreateWindow(config)
         setMinimizeHover(false)
     end))
     local discordLink = "https://discord.gg/lynxx"
-    local discordPillW = 132
+    local discordText = "discord.gg/lynxx"
+    local discordTextStart = 33
+    local discordTextW = game:GetService("TextService"):GetTextSize(discordText, fontSize.small, Enum.Font.GothamBold, Vector2.new(1000, 100)).X
+    local discordPillW = math.ceil(discordTextStart + discordTextW + 9)
     local btnDiscord = new("TextButton", {
         Parent = scriptHeader,
         Size = UDim2.new(0, discordPillW, 0, 22),
@@ -492,9 +495,9 @@ function Library:CreateWindow(config)
     })
     local discordTitle = new("TextLabel", {
         Parent = btnDiscord,
-        Text = "discord.gg/lynxx",
-        Size = UDim2.new(1, -38, 1, 0),
-        Position = UDim2.new(0, 33, 0, 0),
+        Text = discordText,
+        Size = UDim2.new(0, math.ceil(discordTextW) + 2, 1, 0),
+        Position = UDim2.new(0, discordTextStart, 0, 0),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.small,
