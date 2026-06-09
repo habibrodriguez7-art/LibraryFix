@@ -443,50 +443,56 @@ function Library:CreateWindow(config)
         setMinimizeHover(false)
     end))
     local discordLink = "https://discord.gg/lynxx"
-    local discordColor = Color3.fromRGB(88, 101, 242)
-    local discordHover = Color3.fromRGB(108, 121, 255)
-    local pillW = 60
     local btnDiscord = new("TextButton", {
         Parent = scriptHeader,
-        Size = UDim2.new(0, pillW, 0, 20),
-        Position = UDim2.new(1, -(34 + pillW), 0.5, -10),
-        BackgroundColor3 = discordColor,
-        BackgroundTransparency = 0.05,
+        Size = UDim2.new(0, 22, 0, 22),
+        Position = UDim2.new(1, -56, 0.5, -11),
+        BackgroundColor3 = colors.bg2,
+        BackgroundTransparency = sectionTransparency,
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
         ZIndex = 7
     })
-    new("UICorner", {Parent = btnDiscord, CornerRadius = UDim.new(0, 6)})
-    new("UIStroke", {Parent = btnDiscord, Color = discordHover, Thickness = 1, Transparency = 0.5})
-    new("TextLabel", {
+    new("UICorner", {Parent = btnDiscord, CornerRadius = UDim.new(0, 5)})
+    local btnDiscordStroke = new("UIStroke", {
         Parent = btnDiscord,
-        Text = "Discord",
-        Size = UDim2.new(1, 0, 1, 0),
+        Color = colors.border,
+        Thickness = 1,
+        Transparency = 0.4
+    })
+    local discordIcon = new("ImageLabel", {
+        Parent = btnDiscord,
+        Image = "rbxassetid://84640740142415",
+        Size = UDim2.new(0, 15, 0, 15),
+        Position = UDim2.new(0.5, -7.5, 0.5, -7.5),
         BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = fontSize.small,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        ImageColor3 = colors.primary,
         ZIndex = 8
     })
+    local function setDiscordHover(hovering)
+        btnDiscord.BackgroundColor3 = hovering and colors.bg3 or colors.bg2
+        btnDiscordStroke.Color = hovering and colors.primary or colors.border
+        btnDiscordStroke.Transparency = hovering and 0.1 or 0.4
+        discordIcon.Size = hovering and UDim2.new(0, 16, 0, 16) or UDim2.new(0, 15, 0, 15)
+        discordIcon.Position = hovering and UDim2.new(0.5, -8, 0.5, -8) or UDim2.new(0.5, -7.5, 0.5, -7.5)
+    end
     local function copyDiscord()
         local clip = setclipboard or toclipboard or writeclipboard or (Clipboard and Clipboard.set) or (clipboard and clipboard.set)
         local ok = false
         if clip then ok = pcall(clip, discordLink) end
         if ok then
-            self:MakeNotify({Title = "Discord", Description = "Invite link disalin ke clipboard!", Color = discordColor})
+            self:MakeNotify({Title = "Discord", Description = "Invite link disalin ke clipboard!", Color = colors.primary})
         else
-            self:MakeNotify({Title = "Discord", Description = discordLink, Color = discordColor, Delay = 6})
+            self:MakeNotify({Title = "Discord", Description = discordLink, Color = colors.primary, Delay = 6})
         end
     end
     self:AddConnection("discordClick", btnDiscord.MouseButton1Click:Connect(copyDiscord))
     self:AddConnection("discordHoverIn", btnDiscord.MouseEnter:Connect(function()
-        btnDiscord.BackgroundColor3 = discordHover
-        btnDiscord.BackgroundTransparency = 0
+        setDiscordHover(true)
     end))
     self:AddConnection("discordHoverOut", btnDiscord.MouseLeave:Connect(function()
-        btnDiscord.BackgroundColor3 = discordColor
-        btnDiscord.BackgroundTransparency = 0.05
+        setDiscordHover(false)
     end))
     self._navContainer = new("ScrollingFrame", {
         Parent = self._sidebar,
