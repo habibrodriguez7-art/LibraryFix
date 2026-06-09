@@ -501,7 +501,7 @@ function Library:CreateWindow(config)
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.small,
-        TextColor3 = colors.text,
+        TextColor3 = colors.primary,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 8
@@ -509,7 +509,6 @@ function Library:CreateWindow(config)
     local function setDiscordHover(hovering)
         btnDiscord.BackgroundTransparency = hovering and 0.05 or 0.15
         btnDiscordStroke.Transparency = hovering and 0 or 0.25
-        discordTitle.TextColor3 = hovering and colors.primary or colors.text
     end
     local function copyDiscord()
         local clip = setclipboard or toclipboard or writeclipboard or (Clipboard and Clipboard.set) or (clipboard and clipboard.set)
