@@ -443,10 +443,11 @@ function Library:CreateWindow(config)
         setMinimizeHover(false)
     end))
     local discordLink = "https://discord.gg/lynxx"
+    local discordPillW = 104
     local btnDiscord = new("TextButton", {
         Parent = scriptHeader,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -56, 0.5, -11),
+        Size = UDim2.new(0, discordPillW, 0, 22),
+        Position = UDim2.new(1, -(34 + discordPillW), 0.5, -11),
         BackgroundColor3 = colors.bg2,
         BackgroundTransparency = sectionTransparency,
         BorderSizePixel = 0,
@@ -461,21 +462,33 @@ function Library:CreateWindow(config)
         Thickness = 1,
         Transparency = 0.4
     })
-    local discordIcon = new("ImageLabel", {
+    new("ImageLabel", {
         Parent = btnDiscord,
         Image = "rbxassetid://84640740142415",
         Size = UDim2.new(0, 15, 0, 15),
-        Position = UDim2.new(0.5, -7.5, 0.5, -7.5),
+        Position = UDim2.new(0, 8, 0.5, -7.5),
         BackgroundTransparency = 1,
-        ImageColor3 = colors.primary,
+        ImageColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 8
+    })
+    local discordTitle = new("TextLabel", {
+        Parent = btnDiscord,
+        Text = "Lynx Official",
+        Size = UDim2.new(1, -30, 1, 0),
+        Position = UDim2.new(0, 27, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = fontSize.small,
+        TextColor3 = colors.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = 8
     })
     local function setDiscordHover(hovering)
         btnDiscord.BackgroundColor3 = hovering and colors.bg3 or colors.bg2
         btnDiscordStroke.Color = hovering and colors.primary or colors.border
         btnDiscordStroke.Transparency = hovering and 0.1 or 0.4
-        discordIcon.Size = hovering and UDim2.new(0, 16, 0, 16) or UDim2.new(0, 15, 0, 15)
-        discordIcon.Position = hovering and UDim2.new(0.5, -8, 0.5, -8) or UDim2.new(0.5, -7.5, 0.5, -7.5)
+        discordTitle.TextColor3 = hovering and colors.primary or colors.text
     end
     local function copyDiscord()
         local clip = setclipboard or toclipboard or writeclipboard or (Clipboard and Clipboard.set) or (clipboard and clipboard.set)
