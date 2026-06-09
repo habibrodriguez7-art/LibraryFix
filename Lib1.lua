@@ -451,8 +451,8 @@ function Library:CreateWindow(config)
         Parent = scriptHeader,
         Size = UDim2.new(0, discordPillW, 0, 22),
         Position = UDim2.new(1, -(34 + discordPillW), 0.5, -11),
-        BackgroundColor3 = colors.bg3,
-        BackgroundTransparency = 0.15,
+        BackgroundColor3 = colors.bg2,
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
@@ -507,7 +507,7 @@ function Library:CreateWindow(config)
         ZIndex = 8
     })
     local function setDiscordHover(hovering)
-        btnDiscord.BackgroundTransparency = hovering and 0.05 or 0.15
+        btnDiscord.BackgroundTransparency = hovering and 0.1 or 0.2
         btnDiscordStroke.Transparency = hovering and 0 or 0.25
     end
     local function copyDiscord()
