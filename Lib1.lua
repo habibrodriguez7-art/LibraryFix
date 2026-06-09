@@ -1,3 +1,4 @@
+--w
 local Library = {}
 Library.flags = {}
 Library.pages = {}
@@ -138,11 +139,6 @@ function Library:Cleanup()
     end
     self._currentPage = nil
     self._initialized = false
-    if self._gui then
-        pcall(function() self._gui:Destroy() end)
-        self._gui = nil
-    end
-    self._win = nil
 end
 local function DeepCopy(original, _seen)
     _seen = _seen or {}
@@ -205,8 +201,7 @@ function Library.ConfigSystem.Get(path, default)
         if type(value) ~= "table" then return default end
         value = value[key]
     end
-    if value == nil then return default end
-    return value
+    return value ~= nil and value or default
 end
 function Library.ConfigSystem.Set(path, value)
     if not path then return end
@@ -229,7 +224,7 @@ function Library.ConfigSystem.Delete()
     end
 end
 local function MarkDirty()
-    if _G.LynxGUI and _G.LynxGUI.AutoSaveEnabled == false then return end
+    if _G.AutoSaveEnabled == false then return end
     isDirty = true
     if Library._saveThread then
         pcall(function() task.cancel(Library._saveThread) end)
@@ -259,39 +254,23 @@ end
 local function ExecuteConfigCallbacks()
     for _, entry in pairs(CallbackRegistry) do
         local value = Library.ConfigSystem.Get(entry.path, entry.default)
-        if entry.updateVisual then
-            local ok, err = pcall(entry.updateVisual, value)
-            if not ok then
-                warn("[LynxGUI] Visual update error for '" .. tostring(entry.path) .. "': " .. tostring(err))
-            end
-        end
-        if entry.callback then
-            local ok, err = pcall(entry.callback, value)
-            if not ok then
-                warn("[LynxGUI] Callback error for '" .. tostring(entry.path) .. "': " .. tostring(err))
-            end
-        end
+        if entry.updateVisual then pcall(entry.updateVisual, value) end
+        if entry.callback     then pcall(entry.callback,     value) end
     end
 end
-_G.LynxGUI = _G.LynxGUI or {}
-_G.LynxGUI.AutoSaveEnabled = true
-function _G.LynxGUI.GetConfigValue(key, default)
+_G.AutoSaveEnabled = true
+function _G.GetConfigValue(key, default)
     return Library.ConfigSystem.Get(key, default)
 end
-function _G.LynxGUI.SaveConfigValue(key, value)
+function _G.SaveConfigValue(key, value)
     Library.ConfigSystem.Set(key, value)
-    if _G.LynxGUI.AutoSaveEnabled then
+    if _G.AutoSaveEnabled then
         MarkDirty()
     end
 end
-function _G.LynxGUI.GetFullConfig()
+function _G.GetFullConfig()
     return CurrentConfig
 end
--- Backward compatibility
-_G.AutoSaveEnabled = _G.LynxGUI.AutoSaveEnabled
-_G.GetConfigValue = _G.LynxGUI.GetConfigValue
-_G.SaveConfigValue = _G.LynxGUI.SaveConfigValue
-_G.GetFullConfig = _G.LynxGUI.GetFullConfig
 function Library:CreateWindow(config)
     config = config or {}
     local name = config.Name or "LynxGUI"
@@ -617,8 +596,7 @@ function Library:CreateWindow(config)
             end
         end)
         iconConns[#iconConns + 1] = UserInputService.InputChanged:Connect(function(input)
-            if not iconDragging then return end
-            if not icon or not icon.Parent or not iconStartPos or not iconDragStart then return end
+            if not iconDragging or not icon or not icon.Parent or not iconStartPos or not iconDragStart then return end
             if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                 local delta = input.Position - iconDragStart
                 if delta.Magnitude > dragThreshold then
@@ -642,7 +620,7 @@ function Library:CreateWindow(config)
                 end
             end
         end)
-        self:AddConnection("iconDestroying", icon.Destroying:Connect(disconnectIconConns))
+        icon.Destroying:Connect(disconnectIconConns)
     end
     self:AddConnection("minimizeBtn", btnMinHeader.MouseButton1Click:Connect(function()
         if not minimized then
@@ -670,7 +648,6 @@ function Library:CreateWindow(config)
         end
     end))
     self:AddConnection("inputChanged", UserInputService.InputChanged:Connect(function(input)
-        if not dragging and not resizing then return end
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if dragging and startPos then
                 local delta = input.Position - dragStart
@@ -690,9 +667,9 @@ function Library:CreateWindow(config)
             resizing = false
         end
     end))
-    self:AddConnection("guiDestroying", self._gui.Destroying:Connect(function()
+    self._gui.Destroying:Connect(function()
         self:Cleanup()
-    end))
+    end)
     return self
 end
 function Library:CreatePage(name, title, imageId, order)
@@ -871,11 +848,11 @@ function Library:CreateCategory(parent, title, startOpen)
     local isOpen = startOpen
     arrow.Rotation = startOpen and 180 or 0
 
-    self:AddConnection("category_" .. title, header.MouseButton1Click:Connect(function()
+    header.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         contentContainer.Visible = isOpen
         arrow.Rotation = isOpen and 180 or 0
-    end))
+    end)
 
     return contentContainer
 end
@@ -1199,10 +1176,23 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
     local function clearOptionFrames()
         disconnectOptionConns()
         
+        -- Batch penghapusan Frame lama agar tidak lag saat refresh
+        local framesToDelete = {}
         for _, child in scrollSelect:GetChildren() do
-            if child:IsA("Frame") then
-                pcall(function() child:Destroy() end)
+            if child:IsA("Frame") then 
+                table.insert(framesToDelete, child)
             end
+        end
+        
+        if #framesToDelete > 0 then
+            task.spawn(function()
+                for i, f in ipairs(framesToDelete) do
+                    pcall(function() f:Destroy() end)
+                    if i % 8 == 0 then
+                        RunService.Heartbeat:Wait()
+                    end
+                end
+            end)
         end
         
         table.clear(optionFrameCache)
@@ -1322,7 +1312,7 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
                 if not table.find(DropdownFunc.Value, value) then
                     table.insert(DropdownFunc.Value, value)
                 else
-                    for i, v in ipairs(DropdownFunc.Value) do
+                    for i, v in pairs(DropdownFunc.Value) do
                         if v == value then
                             table.remove(DropdownFunc.Value, i)
                             break
@@ -1340,8 +1330,6 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
     end
     
     function DropdownFunc:Set(Value)
-        if DropdownFunc._setting then return end
-        DropdownFunc._setting = true
         if isMulti and type(Value) ~= "table" then Value = {} end
         DropdownFunc.Value = Value
         if configPath then
@@ -1352,9 +1340,7 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
             refreshSelectionVisuals()
         else
             if isMulti then
-                local strs = {}
-                for _, sv in ipairs(DropdownFunc.Value) do table.insert(strs, tostring(sv)) end
-                optionLabel.Text = (#strs == 0) and defaultText or table.concat(strs, ", ")
+                optionLabel.Text = (#DropdownFunc.Value == 0) and defaultText or table.concat(DropdownFunc.Value, ", ")
             else
                 optionLabel.Text = (DropdownFunc.Value ~= nil) and tostring(DropdownFunc.Value) or defaultText
             end
@@ -1366,7 +1352,6 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
                 onSelect((DropdownFunc.Value ~= nil) and tostring(DropdownFunc.Value) or "")
             end
         end
-        DropdownFunc._setting = false
     end
     
     function DropdownFunc:SetValue(val) self:Set(val) end
@@ -1379,15 +1364,19 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
         clearOptionFrames()
         DropdownFunc.Options = newList
         
-        local batchSize = 20
-        for i, opt in ipairs(newList) do
-            DropdownFunc:AddOption(opt)
-            if i % batchSize == 0 then
-                RunService.Heartbeat:Wait()
+        -- Kita masukkan pembuatan elemen ke dalam task.spawn agar background UI
+        -- tidak menunggu operasi pemrosesan array besar selesai secara kaku.
+        task.spawn(function()
+            local batchSize = 20
+            for i, opt in ipairs(newList) do
+                DropdownFunc:AddOption(opt)
+                if i % batchSize == 0 then
+                    RunService.Heartbeat:Wait()
+                end
             end
-        end
-        isBuilt = true
-        DropdownFunc:Set(selecting)
+            isBuilt = true
+            DropdownFunc:Set(selecting)
+        end)
     end
     
     function DropdownFunc:Refresh(newList)
@@ -1436,9 +1425,7 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
     if not isMulti and DropdownFunc.Value ~= nil then
         optionLabel.Text = tostring(DropdownFunc.Value)
     elseif isMulti and type(DropdownFunc.Value) == "table" and #DropdownFunc.Value > 0 then
-        local strs = {}
-        for _, sv in ipairs(DropdownFunc.Value) do table.insert(strs, tostring(sv)) end
-        optionLabel.Text = table.concat(strs, ", ")
+        optionLabel.Text = table.concat(DropdownFunc.Value, ", ")
     end
     
     if configPath then
@@ -1451,9 +1438,7 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
                 refreshSelectionVisuals()
             else
                 if isMulti then
-                    local strs = {}
-                    for _, sv in ipairs(val) do table.insert(strs, tostring(sv)) end
-                    optionLabel.Text = (#strs == 0) and defaultText or table.concat(strs, ", ")
+                    optionLabel.Text = (#val == 0) and defaultText or table.concat(val, ", ")
                 else
                     optionLabel.Text = (val ~= nil) and tostring(val) or defaultText
                 end
@@ -1542,24 +1527,7 @@ function Library:CreateInput(parent, label, configPath, defaultValue, callback)
         local resolved = resolveValue(tostring(initialValue))
         callback(resolved)
     end
-    local inputSetting = false
-    return frame, {
-        SetValue = function(_, val)
-            if inputSetting then return end
-            inputSetting = true
-            inputBox.Text = tostring(val or "")
-            local resolved = resolveValue(tostring(val))
-            if configPath then
-                Library.ConfigSystem.Set(configPath, resolved)
-                MarkDirty()
-            end
-            if callback then callback(resolved) end
-            inputSetting = false
-        end,
-        GetValue = function()
-            return resolveValue(inputBox.Text)
-        end
-    }
+    return frame
 end
 function Library:CreateButton(parent, label, callback)
     local btnFrame = new("Frame", {
@@ -1742,7 +1710,6 @@ function Library:_createConfigTab(WindowObject)
         Default  = true,
         NoSave   = true,
         Callback = function(val)
-            if _G.LynxGUI then _G.LynxGUI.AutoSaveEnabled = val end
             _G.AutoSaveEnabled = val
             self:MakeNotify({
                 Title       = "Auto Save",
@@ -1941,14 +1908,11 @@ function Library:Window(config)
                 local frame = toggleResult and toggleResult.frame or toggleResult
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
                 function toggleObj:SetValue(val)
-                    if toggleObj._setting then return end
-                    toggleObj._setting = true
                     self._value = val
                     if toggleResult and toggleResult.set then
                         toggleResult.set(val)
                     end
                     if callback then callback(val) end
-                    toggleObj._setting = false
                 end
                 function toggleObj:GetValue()
                     return self._value
@@ -2013,9 +1977,11 @@ function Library:Window(config)
                 local noSave      = inputConfig.NoSave or false
                 local configPath  = noSave and nil or ("Inputs." .. title:gsub("%s+", "_"))
                 
-                local frame, inputController = self._library:CreateInput(self._container, title, configPath, default, callback)
+                local frame = self._library:CreateInput(self._container, title, configPath, default, callback)
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
-                return inputController
+                return {
+                    SetValue = function(self, val) end
+                }
             end
             function SectionObject:AddButton(buttonConfig)
                 buttonConfig = buttonConfig or {}
@@ -2120,9 +2086,9 @@ function Library:Window(config)
                 end
 
                 if titleLabel then
-                    self._library:AddConnection("paragraph_title_" .. tostring(frame), titleLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow))
+                    titleLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow)
                 end
-                self._library:AddConnection("paragraph_content_" .. tostring(frame), contentLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow))
+                contentLabel:GetPropertyChangedSignal("TextBounds"):Connect(reflow)
                 task.defer(reflow)
 
                 return {
