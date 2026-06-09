@@ -10,8 +10,6 @@ Library._sidebar = nil
 Library._contentBg = nil
 Library._pageTitle = nil
 Library._navContainer = nil
-Library._winFade = nil
-Library._pageFade = nil
 Library._connections = {}
 Library._searchIndex = {}
 Library._saveThread = nil
@@ -275,25 +273,6 @@ end
 function _G.GetFullConfig()
     return CurrentConfig
 end
--- One-shot fade-in: shows a solid overlay then tweens it out so the content
--- underneath appears to fade in. Event-driven (single tween, self-disconnects),
--- so idle cost is zero once the overlay is hidden again.
-local function playFadeIn(overlay, dur)
-    if not overlay or not overlay.Parent then return end
-    overlay.BackgroundTransparency = 0
-    overlay.Visible = true
-    local tween = TweenService:Create(
-        overlay,
-        TweenInfo.new(dur or 0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {BackgroundTransparency = 1}
-    )
-    local conn
-    conn = tween.Completed:Connect(function()
-        if conn then conn:Disconnect() conn = nil end
-        if overlay and overlay.Parent then overlay.Visible = false end
-    end)
-    tween:Play()
-end
 function Library:CreateWindow(config)
     config = config or {}
     local name = config.Name or "LynxGUI"
@@ -333,18 +312,6 @@ function Library:CreateWindow(config)
         ZIndex = 3
     })
     new("UICorner", {Parent = self._win, CornerRadius = UDim.new(0, 7)})
-    self._winFade = new("Frame", {
-        Parent = self._win,
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = colors.bg1,
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Visible = false,
-        ZIndex = 1000,
-        Name = "WinFade"
-    })
-    new("UICorner", {Parent = self._winFade, CornerRadius = UDim.new(0, 7)})
     self._sidebar = new("Frame", {
         Parent = self._win,
         Size = UDim2.new(0, sidebarWidth, 1, -headerHeight),
@@ -574,17 +541,6 @@ function Library:CreateWindow(config)
         ClipsDescendants = true,
         ZIndex = 4
     })
-    self._pageFade = new("Frame", {
-        Parent = self._contentBg,
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = colors.bg1,
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Visible = false,
-        ZIndex = 50,
-        Name = "PageFade"
-    })
     local topBar = new("Frame", {
         Parent = self._contentBg,
         Size = UDim2.new(1, -4, 0, topBarHeight),
@@ -705,7 +661,6 @@ function Library:CreateWindow(config)
             self._win.Visible = true
             self._win.Size = savedWinSize
             self._win.Position = savedWinPos
-            playFadeIn(self._winFade, 0.18)
             disconnectIconConns()
             icon:Destroy()
             icon = nil
@@ -796,7 +751,6 @@ function Library:CreateWindow(config)
     self._gui.Destroying:Connect(function()
         self:Cleanup()
     end)
-    playFadeIn(self._winFade, 0.2)
     return self
 end
 function Library:_createSearchBar()
@@ -1178,7 +1132,6 @@ function Library:_switchPage(pageName)
         if self._pageTitle then
             self._pageTitle.Text = self.pages[pageName].title or pageName
         end
-        playFadeIn(self._pageFade, 0.16)
     end
     self._currentPage = pageName
 end
