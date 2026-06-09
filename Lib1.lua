@@ -489,8 +489,6 @@ function Library:CreateWindow(config)
             NumberSequenceKeypoint.new(1, 1)
         })
     })
-    local sepTween = TweenService:Create(discordSep, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.6})
-    sepTween:Play()
     local discordTitle = new("TextLabel", {
         Parent = btnDiscord,
         Text = "discord.gg/lynxx",
