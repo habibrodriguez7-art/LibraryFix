@@ -727,14 +727,33 @@ function Library:_createSearchBar(scriptHeader)
         Size = UDim2.new(0, 16, 0, 16),
         Position = UDim2.new(1, -20, 0.5, -8),
         BackgroundTransparency = 1,
-        Text = "✕",
-        Font = Enum.Font.GothamBold,
-        TextSize = fontSize.small,
-        TextColor3 = colors.textDimmer,
+        Text = "",
         AutoButtonColor = false,
         Visible = false,
         ZIndex = 9
     })
+    local clearLines = {}
+    local function addClearLine(rot)
+        local line = new("Frame", {
+            Parent = clearBtn,
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.new(0, 10, 0, 1.6),
+            Rotation = rot,
+            BackgroundColor3 = colors.textDimmer,
+            BorderSizePixel = 0,
+            ZIndex = 10
+        })
+        new("UICorner", {Parent = line, CornerRadius = UDim.new(1, 0)})
+        clearLines[#clearLines + 1] = line
+    end
+    addClearLine(45)
+    addClearLine(-45)
+    local function setClearColor(c)
+        for _, line in ipairs(clearLines) do
+            line.BackgroundColor3 = c
+        end
+    end
     local ROW_H, ROW_GAP, LIST_PAD, MAX_PANEL_H = 32, 3, 4, 168
     local resultsPanel = new("Frame", {
         Parent = self._win,
@@ -924,6 +943,12 @@ function Library:_createSearchBar(scriptHeader)
     end))
     self:AddConnection("searchClear", clearBtn.MouseButton1Click:Connect(function()
         searchBox.Text = ""
+    end))
+    self:AddConnection("searchClearHoverIn", clearBtn.MouseEnter:Connect(function()
+        setClearColor(colors.primary)
+    end))
+    self:AddConnection("searchClearHoverOut", clearBtn.MouseLeave:Connect(function()
+        setClearColor(colors.textDimmer)
     end))
 end
 function Library:CreatePage(name, title, imageId, order)
