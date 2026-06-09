@@ -1340,6 +1340,8 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
     end
     
     function DropdownFunc:Set(Value)
+        if DropdownFunc._setting then return end
+        DropdownFunc._setting = true
         if isMulti and type(Value) ~= "table" then Value = {} end
         DropdownFunc.Value = Value
         if configPath then
@@ -1364,6 +1366,7 @@ function Library:_createBaseDropdown(parent, title, imageId, items, configPath, 
                 onSelect((DropdownFunc.Value ~= nil) and tostring(DropdownFunc.Value) or "")
             end
         end
+        DropdownFunc._setting = false
     end
     
     function DropdownFunc:SetValue(val) self:Set(val) end
@@ -1539,8 +1542,11 @@ function Library:CreateInput(parent, label, configPath, defaultValue, callback)
         local resolved = resolveValue(tostring(initialValue))
         callback(resolved)
     end
+    local inputSetting = false
     return frame, {
         SetValue = function(_, val)
+            if inputSetting then return end
+            inputSetting = true
             inputBox.Text = tostring(val or "")
             local resolved = resolveValue(tostring(val))
             if configPath then
@@ -1548,6 +1554,7 @@ function Library:CreateInput(parent, label, configPath, defaultValue, callback)
                 MarkDirty()
             end
             if callback then callback(resolved) end
+            inputSetting = false
         end,
         GetValue = function()
             return resolveValue(inputBox.Text)
@@ -1934,11 +1941,14 @@ function Library:Window(config)
                 local frame = toggleResult and toggleResult.frame or toggleResult
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
                 function toggleObj:SetValue(val)
+                    if toggleObj._setting then return end
+                    toggleObj._setting = true
                     self._value = val
                     if toggleResult and toggleResult.set then
                         toggleResult.set(val)
                     end
                     if callback then callback(val) end
+                    toggleObj._setting = false
                 end
                 function toggleObj:GetValue()
                     return self._value
