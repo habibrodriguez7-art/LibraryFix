@@ -451,8 +451,8 @@ function Library:CreateWindow(config)
         Parent = scriptHeader,
         Size = UDim2.new(0, discordPillW, 0, 22),
         Position = UDim2.new(1, -(34 + discordPillW), 0.5, -11),
-        BackgroundColor3 = colors.bg2,
-        BackgroundTransparency = sectionTransparency,
+        BackgroundColor3 = colors.bg3,
+        BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
@@ -461,9 +461,9 @@ function Library:CreateWindow(config)
     new("UICorner", {Parent = btnDiscord, CornerRadius = UDim.new(0, 5)})
     local btnDiscordStroke = new("UIStroke", {
         Parent = btnDiscord,
-        Color = colors.border,
+        Color = colors.primary,
         Thickness = 1,
-        Transparency = 0.4
+        Transparency = 0.25
     })
     new("ImageLabel", {
         Parent = btnDiscord,
@@ -507,9 +507,8 @@ function Library:CreateWindow(config)
         ZIndex = 8
     })
     local function setDiscordHover(hovering)
-        btnDiscord.BackgroundColor3 = hovering and colors.bg3 or colors.bg2
-        btnDiscordStroke.Color = hovering and colors.primary or colors.border
-        btnDiscordStroke.Transparency = hovering and 0.1 or 0.4
+        btnDiscord.BackgroundTransparency = hovering and 0.05 or 0.15
+        btnDiscordStroke.Transparency = hovering and 0 or 0.25
         discordTitle.TextColor3 = hovering and colors.primary or colors.text
     end
     local function copyDiscord()
