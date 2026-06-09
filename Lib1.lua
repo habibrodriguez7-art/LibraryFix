@@ -444,8 +444,8 @@ function Library:CreateWindow(config)
     end))
     self._navContainer = new("ScrollingFrame", {
         Parent = self._sidebar,
-        Size = UDim2.new(1, -10, 1, -10),
-        Position = UDim2.new(0, 5, 0, 5),
+        Size = UDim2.new(1, -10, 1, -43),
+        Position = UDim2.new(0, 5, 0, 38),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ScrollBarThickness = 0,
@@ -671,18 +671,19 @@ function Library:CreateWindow(config)
             resizing = false
         end
     end))
-    self:_createSearchBar(scriptHeader)
+    self:_createSearchBar()
     self._gui.Destroying:Connect(function()
         self:Cleanup()
     end)
     return self
 end
-function Library:_createSearchBar(scriptHeader)
-    local searchW = 150
+function Library:_createSearchBar()
+    local searchW = sidebarWidth - 12
+    local searchH = 26
     local searchContainer = new("Frame", {
-        Parent = scriptHeader,
-        Size = UDim2.new(0, searchW, 0, 22),
-        Position = UDim2.new(1, -(searchW + 36), 0.5, -11),
+        Parent = self._sidebar,
+        Size = UDim2.new(0, searchW, 0, searchH),
+        Position = UDim2.new(0, 6, 0, 6),
         BackgroundColor3 = colors.bg2,
         BackgroundTransparency = sectionTransparency,
         BorderSizePixel = 0,
@@ -758,7 +759,7 @@ function Library:_createSearchBar(scriptHeader)
     local resultsPanel = new("Frame", {
         Parent = self._win,
         Size = UDim2.new(0, searchW, 0, ROW_H + LIST_PAD * 2),
-        Position = UDim2.new(1, -(searchW + 36), 0, headerHeight + 2),
+        Position = UDim2.new(0, 6, 0, headerHeight + searchH + 9),
         BackgroundColor3 = colors.bg2,
         BackgroundTransparency = panelTransparency,
         BorderSizePixel = 0,
