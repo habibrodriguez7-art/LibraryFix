@@ -442,6 +442,52 @@ function Library:CreateWindow(config)
     self:AddConnection("minimizeHoverOut", btnMinHeader.MouseLeave:Connect(function()
         setMinimizeHover(false)
     end))
+    local discordLink = "https://discord.gg/lynxx"
+    local discordColor = Color3.fromRGB(88, 101, 242)
+    local discordHover = Color3.fromRGB(108, 121, 255)
+    local pillW = 60
+    local btnDiscord = new("TextButton", {
+        Parent = scriptHeader,
+        Size = UDim2.new(0, pillW, 0, 20),
+        Position = UDim2.new(1, -(34 + pillW), 0.5, -10),
+        BackgroundColor3 = discordColor,
+        BackgroundTransparency = 0.05,
+        BorderSizePixel = 0,
+        Text = "",
+        AutoButtonColor = false,
+        ZIndex = 7
+    })
+    new("UICorner", {Parent = btnDiscord, CornerRadius = UDim.new(0, 6)})
+    new("UIStroke", {Parent = btnDiscord, Color = discordHover, Thickness = 1, Transparency = 0.5})
+    new("TextLabel", {
+        Parent = btnDiscord,
+        Text = "Discord",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = fontSize.small,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 8
+    })
+    local function copyDiscord()
+        local clip = setclipboard or toclipboard or writeclipboard or (Clipboard and Clipboard.set) or (clipboard and clipboard.set)
+        local ok = false
+        if clip then ok = pcall(clip, discordLink) end
+        if ok then
+            self:MakeNotify({Title = "Discord", Description = "Invite link disalin ke clipboard!", Color = discordColor})
+        else
+            self:MakeNotify({Title = "Discord", Description = discordLink, Color = discordColor, Delay = 6})
+        end
+    end
+    self:AddConnection("discordClick", btnDiscord.MouseButton1Click:Connect(copyDiscord))
+    self:AddConnection("discordHoverIn", btnDiscord.MouseEnter:Connect(function()
+        btnDiscord.BackgroundColor3 = discordHover
+        btnDiscord.BackgroundTransparency = 0
+    end))
+    self:AddConnection("discordHoverOut", btnDiscord.MouseLeave:Connect(function()
+        btnDiscord.BackgroundColor3 = discordColor
+        btnDiscord.BackgroundTransparency = 0.05
+    end))
     self._navContainer = new("ScrollingFrame", {
         Parent = self._sidebar,
         Size = UDim2.new(1, -10, 1, -43),
