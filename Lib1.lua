@@ -443,7 +443,7 @@ function Library:CreateWindow(config)
         setMinimizeHover(false)
     end))
     local discordLink = "https://discord.gg/lynxx"
-    local discordPillW = 104
+    local discordPillW = 124
     local btnDiscord = new("TextButton", {
         Parent = scriptHeader,
         Size = UDim2.new(0, discordPillW, 0, 22),
@@ -473,8 +473,8 @@ function Library:CreateWindow(config)
     })
     local discordTitle = new("TextLabel", {
         Parent = btnDiscord,
-        Text = "Lynx Official",
-        Size = UDim2.new(1, -30, 1, 0),
+        Text = "discord.gg/lynxx",
+        Size = UDim2.new(1, -32, 1, 0),
         Position = UDim2.new(0, 27, 0, 0),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
