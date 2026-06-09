@@ -443,7 +443,7 @@ function Library:CreateWindow(config)
         setMinimizeHover(false)
     end))
     local discordLink = "https://discord.gg/lynxx"
-    local discordPillW = 124
+    local discordPillW = 132
     local btnDiscord = new("TextButton", {
         Parent = scriptHeader,
         Size = UDim2.new(0, discordPillW, 0, 22),
@@ -471,11 +471,29 @@ function Library:CreateWindow(config)
         ImageColor3 = colors.primary,
         ZIndex = 8
     })
+    local discordSep = new("Frame", {
+        Parent = btnDiscord,
+        Size = UDim2.new(0, 2, 0, 14),
+        Position = UDim2.new(0, 25, 0.5, -7),
+        BackgroundColor3 = colors.primary,
+        BorderSizePixel = 0,
+        ZIndex = 8
+    })
+    new("UICorner", {Parent = discordSep, CornerRadius = UDim.new(1, 0)})
+    new("UIGradient", {
+        Parent = discordSep,
+        Rotation = 90,
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.5, 0),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+    })
     local discordTitle = new("TextLabel", {
         Parent = btnDiscord,
         Text = "discord.gg/lynxx",
-        Size = UDim2.new(1, -32, 1, 0),
-        Position = UDim2.new(0, 27, 0, 0),
+        Size = UDim2.new(1, -38, 1, 0),
+        Position = UDim2.new(0, 33, 0, 0),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.small,
